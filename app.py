@@ -1,19 +1,19 @@
-from flask import Flask, request, jsonify, render_template
-from services.resource_service import load_csv, query_service
+from flask import Flask, request, jsonify
+from services.resource_service import load_data, query_database
 
 app = Flask(__name__)
 
 
 @app.route('/load', methods=['GET'])
-def query_database():
-    load_csv
+def load():
+    load_data()
     return jsonify(success=True)
 
 
-@app.route('/query', methods=['POST'])
-def query_database():
-    query = request.form['query']
-    results = query_service(query)
+@app.route('/query', methods=['GET'])
+def query():
+    question = request.args.get('question')
+    results = query_database(question)
     return jsonify(results)
 
 

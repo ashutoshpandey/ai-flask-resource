@@ -1,16 +1,20 @@
 import json
 import numpy as np
 import pandas as pd
+from utils.csv_util import load_csv
 from utils.pinecone_util import PineconeUtil
 from utils.embedding_util import EmbeddingUtil
 
+
 # Load data and create embeddings
-def load_csv():
+def load_data():
     pinecone_util = PineconeUtil(True)
     embedding_util = EmbeddingUtil()
 
     print('Loading csv...')
-    data = load_csv('data.csv')
+    data = load_csv('files/resources.csv')
+    data['skills'] = data['skills'].apply(lambda x: x.split(':'))
+
     embeddings = embedding_util.create_embeddings(data) 
     pinecone_util.store_embeddings(embeddings)
 
@@ -21,20 +25,26 @@ def cosine_similarity(a, b):
 
 
 # Process the query
-def query_database(query, original_data):
+def query_database(question):
+    original_data = load_csv('files/resources.csv')
+    original_data['skills'] = original_data['skills'].apply(lambda x: x.split(':'))
+
     pinecone_util = PineconeUtil()
     embedding_util = EmbeddingUtil()
 
-    query_embedding = embedding_util.generate_embedding(query)
+    print('Question', question)
+    print('Generating embedding')
+    query_embedding = embedding_util.generate_embedding(question)
+    print('Processing query')
     result = pinecone_util.process_query(query_embedding)
-
+    print('Processing result')
     return process_result(result, original_data, query_embedding)
 
 
 # Process the response
 def process_result(result, original_data, query_embedding, similarity_threshold=0.2):
     embedding_util = EmbeddingUtil()
-
+    print(original_data)
     json_results = []
     for match in result['matches']:
         user_data = original_data.iloc[int(match['id'])][['name', 'email', 'designation', 'skills']]
